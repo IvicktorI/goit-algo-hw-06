@@ -1,4 +1,4 @@
-from collections import UserList
+from collections import UserDict
 
 class Field:
     def __init__(self, value):
@@ -10,6 +10,12 @@ class Field:
 class Name(Field):
     def __init__(self, value : str):
            super().__init__(value)
+           
+    def __eq__(self, other):
+        return isinstance(other, Name) and self.value == other.value
+
+    def __hash__(self):
+        return hash(self.value)
 
 class Phone(Field):
     def __init__(self, value: str):
@@ -30,25 +36,25 @@ class Record:
             _phone=Phone(phone)
             self.phones = [_phone]
     
-    def add_phone(self,phone: Phone):
+    def add_phone(self,phone: str):
         flag=1
         for ph in self.phones:
-            if ph.value==phone.value:
+            if ph.value==phone:
                 flag=0
                 break
         if flag:
             self.phones.append(phone)
         
-    def remove_phone(self, phone: Phone):
+    def remove_phone(self, phone: str):
         for ph in self.phones:
-            if ph.value==phone.value:
+            if ph.value==phone:
                 self.phones.remove(ph)
                 break
     
-    def edit_phone(self,old_phone: Phone,new_phone: Phone):
+    def edit_phone(self,old_phone: str, new_phone: str):
         for ph in self.phones:
-            if ph.value==old_phone.value:
-                ph.value = new_phone.value
+            if ph.value==old_phone:
+                ph.value = new_phone
                 return 1
         return 0
         
@@ -60,35 +66,15 @@ class Record:
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
     
-class AddressBook(UserList):
+class AddressBook(UserDict):
     def add_record(self, record: Record):
-        flag=1
-        for contact in self.data:
-            if contact.name==record.name:
-                flag=0
-                break
-        if flag:
-            self.data.append(record)
+         self.data[record.name] = record
 
     def find(self,name) ->Record:
-        if isinstance(name, str):
-            for contact in self.data:
-                if contact.name.value==name:
-                    return contact
-        if isinstance(name, Name):
-            for contact in self.data:
-                if contact.name.value==name.value:
-                    return contact
+        return self.data[Name(name)]
 
     def delete(self,name):
-        if isinstance(name, str):
-            for contact in self.data:
-                if contact.name.value==name:
-                    self.data.remove(contact)
-        if isinstance(name, Name):
-            for contact in self.data:
-                if contact.name.value==name.value:
-                    self.data.remove(contact)
+        del self.data[Name(name)]
     
     def edit_record(self,name,old_phone,new_phone) -> str:
         for contact in self.data:
@@ -98,7 +84,7 @@ class AddressBook(UserList):
         return 'Record not found'  
                 
     def show_all(self):
-        for contact in self.data:
+        for contact in self.data.values():
             print(contact)
 
 def input_error(func):
@@ -135,9 +121,9 @@ def edit_phone(args, contacts):
         name, old_phone, new_phone = args
     else :
         raise ValueError ('Insufficient parameters')
-    for el in contacts:
-        if el.name.value==name:
-            if el.edit_phone(Phone(old_phone),Phone(new_phone)):
+    temp_name=Name(name)
+    if temp_name in contacts:
+            if contacts[temp_name].edit_phone(old_phone,new_phone):
                 return "Record change."
     return 'Record not found'
 
@@ -147,11 +133,12 @@ def add_phone(args, contacts):
         name, phone = args
     else :
         raise ValueError ('Insufficient parameters')
-    for el in contacts:
-        if el.name.value==name:
-            el.add_phone(Phone(phone))
-            return "Phone add."
-    return 'Record not found'
+    temp_name=Name(name)
+    if temp_name in contacts:
+        contacts[temp_name].add_phone(phone)
+        return "Phone add."
+    else:
+        return 'Record not found'
 
 @input_error
 def delete_phone(args, contacts):
@@ -159,11 +146,12 @@ def delete_phone(args, contacts):
         name, phone = args
     else :
         raise ValueError ('Insufficient parameters')
-    for el in contacts:
-        if el.name.value==name:
-            el.remove_phone(Phone(phone))
-            return "Phone delete."
-    return 'Record not found'
+    temp_name=Name(name)
+    if temp_name in contacts:
+        contacts[temp_name].remove_phone(phone)
+        return "Phone delete."
+    else:
+        return 'Record not found'
 
 @input_error
 def find_record(args, contacts: AddressBook):
@@ -178,11 +166,11 @@ def find_record(args, contacts: AddressBook):
 def delete_record(args, contacts: AddressBook):
     name = args[0]
     contacts.delete(name)
+    return f'Record delete'
 
 @input_error
 def show_all(contacts: AddressBook):
-    for contact in contacts:
-        print(contact)
+    contacts.show_all()
 
 def main():
     contacts = AddressBook()
@@ -196,7 +184,7 @@ def main():
                 print('How can I help you?')
             case 'add':
                 print(add_record(args,contacts))
-            case 'edit':
+            case 'edit_phone':
                 print(edit_phone(args,contacts))
             case 'find':
                 print(find_record(args,contacts))
