@@ -58,9 +58,9 @@ class Record:
                 return 1
         return 0
         
-    def find_phone(self, phone: Phone) ->Phone:
+    def find_phone(self, phone: str) ->Phone:
         for ph in self.phones:
-            if ph.value==phone.value:
+            if ph.value==phone:
                 return ph
             
     def __str__(self):
@@ -68,17 +68,17 @@ class Record:
     
 class AddressBook(UserDict):
     def add_record(self, record: Record):
-         self.data[record.name] = record
+         self.data[record.name.value] = record
 
     def find(self,name) ->Record:
-        return self.data[Name(name)]
+        return self.data[name]
 
     def delete(self,name):
-        del self.data[Name(name)]
+        del self.data[name]
     
     def edit_record(self,name,old_phone,new_phone) -> str:
         for contact in self.data:
-            if contact.name.value==name:
+            if contact==name:
                 contact.edit_phone(Phone(old_phone),Phone(new_phone)) 
                 return 'Record change'
         return 'Record not found'  
@@ -121,10 +121,9 @@ def edit_phone(args, contacts):
         name, old_phone, new_phone = args
     else :
         raise ValueError ('Insufficient parameters')
-    temp_name=Name(name)
-    if temp_name in contacts:
-            if contacts[temp_name].edit_phone(old_phone,new_phone):
-                return "Record change."
+    if name in contacts:
+        if contacts[name].edit_phone(old_phone,new_phone):
+            return "Record change."
     return 'Record not found'
 
 @input_error
@@ -133,9 +132,8 @@ def add_phone(args, contacts):
         name, phone = args
     else :
         raise ValueError ('Insufficient parameters')
-    temp_name=Name(name)
-    if temp_name in contacts:
-        contacts[temp_name].add_phone(phone)
+    if name in contacts:
+        contacts[name].add_phone(phone)
         return "Phone add."
     else:
         return 'Record not found'
@@ -146,9 +144,8 @@ def delete_phone(args, contacts):
         name, phone = args
     else :
         raise ValueError ('Insufficient parameters')
-    temp_name=Name(name)
-    if temp_name in contacts:
-        contacts[temp_name].remove_phone(phone)
+    if name in contacts:
+        contacts[name].remove_phone(phone)
         return "Phone delete."
     else:
         return 'Record not found'
