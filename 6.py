@@ -43,7 +43,7 @@ class Record:
                 flag=0
                 break
         if flag:
-            self.phones.append(phone)
+            self.phones.append(Phone(phone))
         
     def remove_phone(self, phone: str):
         for ph in self.phones:
